@@ -1,0 +1,141 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  padding: 0;
+  margin: 0;
+  color: #fff;
+  font-family: sans-serif;
+}
+
+.container {
+  width: 1280px;
+  margin: auto;
+}
+
+.header {
+  background-color: #122538;
+  padding: 10px;
+  margin-bottom: 15px;
+}
+
+.header-sort-buttons {
+  margin-left: 150px;
+}
+
+.header__select {
+  margin-left: 100px;
+  width: 100px;
+  height: 20px;
+  outline: none;
+  border: none;
+  border-radius: 2px;
+  font-size: 15px;
+  padding-left: 10px;
+}
+
+.button {
+  padding: 10px;
+  outline: none;
+  border: 1px solid #fff;
+  border-radius: 5px;
+  background-color: transparent;
+  color: #fff;
+  font-size: 16px;
+  transition: 0.2s;
+}
+
+.button:hover:enabled {
+  cursor: pointer;
+  background-color: #ffea78;
+  color: #122538;
+  border-color: #122538;
+}
+
+.header-button-active {
+  color: #122538;
+  border-color: #122538;
+  background-color: #fff;
+}
+
+.button-pag {
+  color: #000;
+  border-color: #000;
+  opacity: 1;
+}
+
+.button-pag--active {
+  background-color: #000;
+  color: #fff;
+  border-color: #fff;
+}
+
+.button-pag:disabled {
+  opacity: 0.2;
+}
+
+.header__content {
+  display: flex;
+  align-items: center;
+}
+
+.header__logo {
+  text-transform: uppercase;
+  font-size: 20px;
+}
+
+.header__find-input {
+  font-family: 'Lato', sans-serif;
+  width: 300px;
+  height: 30px;
+  outline: none;
+  border: none;
+  border-radius: 2px;
+  margin-left: 200px;
+  font-size: 20px;
+  padding-left: 10px;
+}
+
+.main {
+  color: #221f1f;
+}
+
+.main__table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.main__table,
+.main__table tr {
+  border-top: 1px solid #eaeaea;
+}
+
+.main__table img {
+  max-width: 100px;
+}
+
+.main__table td, .main__table th {
+  position: relative;
+  padding: 15px 40px 15px 40px;
+  text-align: center;
+  min-width: 150px;
+}
+
+[data-sortable-key]:hover {
+  transition: 0.2s;
+  cursor: pointer;
+  color: red;
+}
+
+.main__pagination-block {
+  margin-top: 20px;
+  padding-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pagination__text {
+  margin-left: 100px;
+}
