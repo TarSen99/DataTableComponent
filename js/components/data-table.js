@@ -158,33 +158,43 @@ export default class DataTable extends Component {
       this._createEditableField(target);
     });
 
-    this.on('click', '[data-type="edit-button"]', event => {
-      let target = event.target.closest('[data-type="edit-button"]');
-
-      this._endEditInputChanges(target);
-    });
-
-    this.on('blur', '[data-element="input-area"]', event => {
-      console.log('this');
+    this.on('focusout', '[data-element="input-area"]', event => {
       let target = event.target.closest('[data-element="input-area"]');
-      //this._endEditInputChanges(target);
+
+      setTimeout(() => {
+        this._endInputEditing('ok', 'focusout');
+      }, 0);
+    });
+
+    document.addEventListener('keydown', event => {
+      if (event.key === 'x' || event.key === 'Escape') {
+        this._endInputEditing();
+      } else if (event.key === 'Enter') {
+        this._endInputEditing('ok');
+      }
     });
   }
 
-  _cancelEditInputChanges() {
-    //////////////////////////////////////
-  }
+  _endInputEditing(state) {
+    let editableBlock = this._element.querySelector(
+      '[data-element="editable-block" ]'
+    );
 
-  _endEditInputChanges(button) {
-    let editableBlock = button.closest('[data-element="editable-block" ]');
-    let currField = button.closest('[data-element="detail-container"]');
-    let editableField = currField.querySelector('[data-element="input-area"]');
-    let parentRowId = button.closest('[data-element="phone-item"]').dataset.id;;
+    if (!editableBlock) {
+      return;
+    }
+
+    let currField = editableBlock.closest('[data-element="detail-container"]');
+    let editableField = editableBlock.querySelector(
+      '[data-element="input-area"]'
+    );
+    let parentRowId = editableBlock.closest('[data-element="phone-item"]')
+      .dataset.id;
 
     currField.dataset.edit = 'false';
     let editableFieldValue = editableField.value;
 
-    if (button.dataset.submit === 'ok') {
+    if (state === 'ok') {
       currField.textContent = editableFieldValue;
 
       let ArrayItemFiled = this._getArrayPhoneItemDetails(parentRowId);
@@ -199,9 +209,7 @@ export default class DataTable extends Component {
   _createEditableField(field) {
     field.dataset.edit = 'true';
 
-    //double space
-    let re = /  /gi;
-    let fieldContent = field.textContent.replace(re, '');
+    let fieldContent = field.textContent.trim();
 
     field.insertAdjacentHTML(
       'beforeend',
@@ -211,28 +219,11 @@ export default class DataTable extends Component {
         class="main__table__input-block">
               <textarea
                data-element="input-area"
-               class="main__table__input">
-                ${fieldContent}
-              </textarea>
-              <div class="editable-block__buttons">
-                <button 
-                data-type="edit-button"
-                data-submit="ok" 
-                class="button button-edit"
-                >
-                 OK
-                </button>
-                
-                <button
-                data-type="edit-button"
-                data-submit="cancel" 
-                class="button button-edit"
-                >
-                 Cancel
-                </button>
+               class="main__table__input">${fieldContent}</textarea>
               </div>
         </div>
-    `);
+    `
+    );
 
     let inputField = field.querySelector('[data-element="input-area"]');
     inputField.focus();

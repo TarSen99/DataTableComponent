@@ -148,18 +148,5 @@ body {
   height: 100%;
   outline: none;
   border: none;
-}
-
-.editable-block__buttons {
-  position: absolute;
-  z-index: 100;
-  top: -33px;
-  right: 0;
-}
-
-.button-edit {
-  background-color: green;
-  color: #fff;
-  font-size: 10px;
-  transition: 0.2s;
+  padding-top: 10px;
 }
