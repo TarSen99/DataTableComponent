@@ -76,7 +76,7 @@ export default class DataTable extends Component {
     });
 
     this.subscribe('phone-checkbox-change', (id, currCheckState) => {
-      let currPhoneInfo = this._defaultPhones.find(phone => phone.id === id);
+      let currPhoneInfo = this._getArrayPhoneItemDetails(id);
       currPhoneInfo.isChecked = currCheckState;
       this._updateMainCheckValue();
 
@@ -92,6 +92,10 @@ export default class DataTable extends Component {
 
       this._renderTableContent();
     });
+  }
+
+  _getArrayPhoneItemDetails(id) {
+    return this._defaultPhones.find(phone => phone.id === id);
   }
 
   _updateMainCheckValue() {
@@ -147,6 +151,91 @@ export default class DataTable extends Component {
 
       this.emit('order-enter');
     });
+
+    this.on('dblclick', '[data-edit="false"]', event => {
+      let target = event.target.closest('[data-edit="false"]');
+
+      this._createEditableField(target);
+    });
+
+    this.on('click', '[data-type="edit-button"]', event => {
+      let target = event.target.closest('[data-type="edit-button"]');
+
+      this._endEditInputChanges(target);
+    });
+
+    this.on('blur', '[data-element="input-area"]', event => {
+      console.log('this');
+      let target = event.target.closest('[data-element="input-area"]');
+      //this._endEditInputChanges(target);
+    });
+  }
+
+  _cancelEditInputChanges() {
+    //////////////////////////////////////
+  }
+
+  _endEditInputChanges(button) {
+    let editableBlock = button.closest('[data-element="editable-block" ]');
+    let currField = button.closest('[data-element="detail-container"]');
+    let editableField = currField.querySelector('[data-element="input-area"]');
+    let parentRowId = button.closest('[data-element="phone-item"]').dataset.id;;
+
+    currField.dataset.edit = 'false';
+    let editableFieldValue = editableField.value;
+
+    if (button.dataset.submit === 'ok') {
+      currField.textContent = editableFieldValue;
+
+      let ArrayItemFiled = this._getArrayPhoneItemDetails(parentRowId);
+      let arrayFieldName = currField.dataset.type;
+
+      ArrayItemFiled[arrayFieldName] = editableFieldValue;
+    }
+
+    editableBlock.remove();
+  }
+
+  _createEditableField(field) {
+    field.dataset.edit = 'true';
+
+    //double space
+    let re = /  /gi;
+    let fieldContent = field.textContent.replace(re, '');
+
+    field.insertAdjacentHTML(
+      'beforeend',
+      `
+        <div 
+        data-element="editable-block" 
+        class="main__table__input-block">
+              <textarea
+               data-element="input-area"
+               class="main__table__input">
+                ${fieldContent}
+              </textarea>
+              <div class="editable-block__buttons">
+                <button 
+                data-type="edit-button"
+                data-submit="ok" 
+                class="button button-edit"
+                >
+                 OK
+                </button>
+                
+                <button
+                data-type="edit-button"
+                data-submit="cancel" 
+                class="button button-edit"
+                >
+                 Cancel
+                </button>
+              </div>
+        </div>
+    `);
+
+    let inputField = field.querySelector('[data-element="input-area"]');
+    inputField.focus();
   }
 
   _clearCheckButtonsStyle() {
@@ -267,10 +356,17 @@ export default class DataTable extends Component {
             return ` 
               ${
                 value['hasPhoto']
-                  ? `<td>
+                  ? `<td 
+                      data-element="detail-container"
+                      >
                         <img src="${phone[key]}">
                    </td>`
-                  : `<td ${value.isSearchable ? `data-searchable` : ''}>
+                  : `<td 
+                      data-element="detail-container"
+                      data-type="${key}"
+                      ${value.isSearchable ? `data-searchable` : ''}
+                      ${value.isEditable ? `data-edit="false"` : ''}
+                      >
                         ${phone[key]}
                    </td>`
               }
@@ -297,7 +393,7 @@ export default class DataTable extends Component {
   _renderTableTitle() {
     this._table.innerHTML = `<tr>
         <th><input
-         data-element="phones-checkbox"
+          data-element="phones-checkbox"
           type="checkbox"
           ${this._mainCheckboxValue ? 'checked' : ''}
           >
@@ -308,7 +404,8 @@ export default class DataTable extends Component {
                 return `
                         <th ${
                           value.isSortable ? `data-sortable-key=${key}` : ''
-                        }>
+                        }
+                        >
                             ${value.title || ''}
                         </th>
                     `;

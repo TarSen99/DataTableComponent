@@ -14,12 +14,14 @@ TableService.getAll().then(phones => {
       name: {
         title: 'Name',
         isSortable: true,
-        isSearchable: true
+        isSearchable: true,
+        isEditable: true
       },
 
       snippet: {
         title: 'Description',
-        isSearchable: true
+        isSearchable: true,
+        isEditable: true
       },
 
       age: {
