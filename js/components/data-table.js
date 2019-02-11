@@ -29,20 +29,20 @@ export default class DataTable extends Component {
 
     this._paginationSelector = new PaginationSelector({
       element: this._element.querySelector(
-        '[data-component="pagination-selector"]'
+        '[data-component="pagination-selector"]',
       ),
       options: [3, 5, 10, 15, 20],
-      defaultValue: 5
+      defaultValue: 5,
     });
 
     this._pagination = new Pagination({
       element: this._element.querySelector('[data-component="pagination"]'),
       totalItemsCount: this.getItemsCount(),
-      itemsPerPage: this._paginationSelector.getPerPage()
+      itemsPerPage: this._paginationSelector.getPerPage(),
     });
 
     this._filterInput = this._element.querySelector(
-      '[data-element="find-input"]'
+      '[data-element="find-input"]',
     );
   }
 
@@ -55,9 +55,9 @@ export default class DataTable extends Component {
 
         this._pagination.updateOptions(
           this._paginationSelector.getPerPage(),
-          this.getItemsCount()
+          this.getItemsCount(),
         );
-      }, 500)
+      }, 500),
     );
 
     this.subscribe('order-enter', this._makeFiltering.bind(this));
@@ -65,7 +65,7 @@ export default class DataTable extends Component {
     this._paginationSelector.subscribe('change-per-page', () => {
       this._pagination.updateOptions(
         this._paginationSelector.getPerPage(),
-        this.getItemsCount()
+        this.getItemsCount(),
       );
 
       this._makeFiltering();
@@ -76,15 +76,16 @@ export default class DataTable extends Component {
     });
 
     this.subscribe('phone-checkbox-change', (id, currCheckState) => {
-      let currPhoneInfo = this._getArrayPhoneItemDetails(id);
+      const currPhoneInfo = this._getArrayPhoneItemDetails(id);
       currPhoneInfo.isChecked = currCheckState;
       this._updateMainCheckValue();
 
       this._renderTableContent();
     });
 
-    this.subscribe('phones-checkbox-change', currCheckState => {
-      this._phones = this._phones.map(phoneInfo => {
+    this.subscribe('phones-checkbox-change', (currCheckState) => {
+      this._phones = this._phones.map((phoneInfo) => {
+        // eslint-disable-next-line no-param-reassign
         phoneInfo.isChecked = currCheckState;
 
         return phoneInfo;
@@ -103,10 +104,10 @@ export default class DataTable extends Component {
   }
 
   _initListeners() {
-    this.on('click', '[data-type="filter-selected"]', event => {
+    this.on('click', '[data-type="filter-selected"]', (event) => {
       this._clearCheckButtonsStyle();
 
-      let btn = event.target.closest('[data-type="filter-selected"]');
+      const btn = event.target.closest('[data-type="filter-selected"]');
       btn.classList.add('header-button-active');
       this._selectedFilter = btn.dataset.value;
 
@@ -115,15 +116,15 @@ export default class DataTable extends Component {
 
       this._pagination.updateOptions(
         this._paginationSelector.getPerPage(),
-        this.getItemsCount()
+        this.getItemsCount(),
       );
     });
 
-    this.on('change', '[data-element="phone-checkbox"]', event => {
-      let currCheckState = event.target.closest(
-        '[data-element="phone-checkbox"]'
+    this.on('change', '[data-element="phone-checkbox"]', (event) => {
+      const currCheckState = event.target.closest(
+        '[data-element="phone-checkbox"]',
       ).checked;
-      let itemId = event.target.closest('[data-element="phone-item"]').dataset
+      const itemId = event.target.closest('[data-element="phone-item"]').dataset
         .id;
 
       this.emit('phone-checkbox-change', itemId, currCheckState);
@@ -139,8 +140,8 @@ export default class DataTable extends Component {
       this.emit('input-enter');
     });
 
-    this.on('click', '[data-sortable-key]', event => {
-      let currOrderName = event.target.closest('[data-sortable-key]').dataset
+    this.on('click', '[data-sortable-key]', (event) => {
+      const currOrderName = event.target.closest('[data-sortable-key]').dataset
         .sortableKey;
 
       if (this._orderName === currOrderName) {
@@ -152,21 +153,19 @@ export default class DataTable extends Component {
       this.emit('order-enter');
     });
 
-    this.on('dblclick', '[data-edit="false"]', event => {
-      let target = event.target.closest('[data-edit="false"]');
+    this.on('dblclick', '[data-edit="false"]', (event) => {
+      const target = event.target.closest('[data-edit="false"]');
 
       this._createEditableField(target);
     });
 
-    this.on('focusout', '[data-element="input-area"]', event => {
-      let target = event.target.closest('[data-element="input-area"]');
-
+    this.on('focusout', '[data-element="input-area"]', () => {
       setTimeout(() => {
         this._endInputEditing('ok', 'focusout');
       }, 0);
     });
 
-    document.addEventListener('keydown', event => {
+    document.addEventListener('keydown', (event) => {
       if (event.key === 'x' || event.key === 'Escape') {
         this._endInputEditing();
       } else if (event.key === 'Enter') {
@@ -176,29 +175,29 @@ export default class DataTable extends Component {
   }
 
   _endInputEditing(state) {
-    let editableBlock = this._element.querySelector(
-      '[data-element="editable-block" ]'
+    const editableBlock = this._element.querySelector(
+      '[data-element="editable-block" ]',
     );
 
     if (!editableBlock) {
       return;
     }
 
-    let currField = editableBlock.closest('[data-element="detail-container"]');
-    let editableField = editableBlock.querySelector(
-      '[data-element="input-area"]'
+    const currField = editableBlock.closest('[data-element="detail-container"]');
+    const editableField = editableBlock.querySelector(
+      '[data-element="input-area"]',
     );
-    let parentRowId = editableBlock.closest('[data-element="phone-item"]')
+    const parentRowId = editableBlock.closest('[data-element="phone-item"]')
       .dataset.id;
 
     currField.dataset.edit = 'false';
-    let editableFieldValue = editableField.value;
+    const editableFieldValue = editableField.value;
 
     if (state === 'ok') {
       currField.textContent = editableFieldValue;
 
-      let ArrayItemFiled = this._getArrayPhoneItemDetails(parentRowId);
-      let arrayFieldName = currField.dataset.type;
+      const ArrayItemFiled = this._getArrayPhoneItemDetails(parentRowId);
+      const arrayFieldName = currField.dataset.type;
 
       ArrayItemFiled[arrayFieldName] = editableFieldValue;
     }
@@ -206,35 +205,36 @@ export default class DataTable extends Component {
     editableBlock.remove();
   }
 
+  // eslint-disable-next-line class-methods-use-this
   _createEditableField(field) {
+    // eslint-disable-next-line no-param-reassign
     field.dataset.edit = 'true';
 
-    let fieldContent = field.textContent.trim();
+    const fieldContent = field.textContent.trim();
 
     field.insertAdjacentHTML(
       'beforeend',
       `
-        <div 
-        data-element="editable-block" 
-        class="main__table__input-block">
+            <div 
+            data-element="editable-block" 
+            class="main__table__input-block">
               <textarea
-               data-element="input-area"
-               class="main__table__input">${fieldContent}</textarea>
-              </div>
-        </div>
-    `
+              data-element="input-area"
+              class="main__table__input">${fieldContent}</textarea>
+            </div>
+           `,
     );
 
-    let inputField = field.querySelector('[data-element="input-area"]');
+    const inputField = field.querySelector('[data-element="input-area"]');
     inputField.focus();
   }
 
   _clearCheckButtonsStyle() {
-    let filterButtons = [
-      ...this._element.querySelectorAll('[data-type="filter-selected"]')
+    const filterButtons = [
+      ...this._element.querySelectorAll('[data-type="filter-selected"]'),
     ];
 
-    filterButtons.forEach(btn => {
+    filterButtons.forEach((btn) => {
       btn.classList.remove('header-button-active');
     });
   }
@@ -243,18 +243,22 @@ export default class DataTable extends Component {
     return this._phonesLength;
   }
 
+  // eslint-disable-next-line class-methods-use-this
   _addCheckFieldToItems(items) {
-    return items.map(item => {
+    return items.map((item) => {
+      // eslint-disable-next-line no-param-reassign
       item.isChecked = false;
 
       return item;
     });
   }
 
+  // eslint-disable-next-line class-methods-use-this
   _debounce(f, delay) {
     let timerId;
 
-    return function() {
+    // eslint-disable-next-line func-names
+    return function () {
       clearTimeout(timerId);
 
       timerId = setTimeout(f, delay);
@@ -263,6 +267,7 @@ export default class DataTable extends Component {
 
   _filterSelectedItems(phones) {
     if (this._selectedFilter === 'checked') {
+      // eslint-disable-next-line no-param-reassign
       phones = phones.filter(phone => phone.isChecked);
     }
 
@@ -274,38 +279,37 @@ export default class DataTable extends Component {
       if (this._orderValue === 'up') {
         if (a[this._orderName] > b[this._orderName]) {
           return 1;
-        } else {
-          return -1;
         }
+        return -1;
       }
 
       if (a[this._orderName] < b[this._orderName]) {
         return 1;
-      } else {
-        return -1;
       }
+      return -1;
     });
   }
 
   _getItemsOfCurrentPage() {
-    let currPage = this._pagination.getCurrentPage();
-    let perPage = this._paginationSelector.getPerPage();
+    const currPage = this._pagination.getCurrentPage();
+    const perPage = this._paginationSelector.getPerPage();
 
-    this._phones = this._phones.filter((phone, index) => {
-      return (
-        index >= currPage * perPage && index < currPage * perPage + perPage
-      );
-    });
+    this._phones = this._phones.filter((phone, index) => (
+      index >= currPage * perPage && index < currPage * perPage + perPage
+    ));
   }
 
   _makeFiltering() {
-    let searchableFields = this._getSearchableFieldNames();
+    const searchableFields = this._getSearchableFieldNames();
     this._filterValue = this._filterInput.value.toLowerCase().trim();
+    // eslint-disable-next-line no-restricted-syntax
     this._phones = this._filterSelectedItems(this._defaultPhones);
 
-    this._phones = this._phones.filter(phone => {
-      for (let fieldName of searchableFields) {
-        let currPhoneValue = phone[fieldName].toLowerCase().trim();
+    // eslint-disable-next-line array-callback-return
+    this._phones = this._phones.filter((phone) => { // eslint-disable-line consistent-return
+      // eslint-disable-next-line no-restricted-syntax
+      for (const fieldName of searchableFields) {
+        const currPhoneValue = phone[fieldName].toLowerCase().trim();
 
         if (currPhoneValue.includes(this._filterValue)) {
           return true;
@@ -324,48 +328,40 @@ export default class DataTable extends Component {
 
   _getSearchableFieldNames() {
     return Object.entries(this._config)
-      .filter(([key, value]) => {
-        return value['isSearchable'];
-      })
+    // eslint-disable-next-line no-unused-vars
+      .filter(([key, value]) => value.isSearchable)
       .map(([key]) => key);
   }
 
   _generatePhonesListHTML(phone) {
-    return `<tr
-         data-element="phone-item"
-         data-id="${phone.id}"
-         >
+    return `
+      <tr
+      data-element="phone-item"
+      data-id="${phone.id}"
+      >
         <td><input
-         data-element="phone-checkbox"
-         type="checkbox"
-         ${phone.isChecked ? 'checked' : ''} 
-         >
-         </td>
-         
-        ${Object.entries(this._config)
-          .map(([key, value]) => {
-            return ` 
-              ${
-                value['hasPhoto']
-                  ? `<td 
-                      data-element="detail-container"
-                      >
-                        <img src="${phone[key]}">
-                   </td>`
-                  : `<td 
-                      data-element="detail-container"
-                      data-type="${key}"
-                      ${value.isSearchable ? `data-searchable` : ''}
-                      ${value.isEditable ? `data-edit="false"` : ''}
-                      >
-                        ${phone[key]}
-                   </td>`
-              }
-                `;
-          })
-          .join('')}
-        
-        </tr>`;
+          data-element="phone-checkbox"
+          type="checkbox"
+          ${phone.isChecked ? 'checked' : ''} 
+          >
+        </td>
+        ${Object.entries(this._config).map(([key, value]) => ` 
+        ${value.hasPhoto ? `
+        <td 
+        data-element="detail-container"
+        >
+          <img src="${phone[key]}">
+        </td>` : `
+        <td 
+        data-element="detail-container"
+        data-type="${key}"
+        ${value.isSearchable ? 'data-searchable' : ''}
+        ${value.isEditable ? 'data-edit="false"' : ''}
+        >
+          ${phone[key]}
+        </td>`}
+        `).join('')}
+      </tr>`;
   }
 
   _renderPhones() {
@@ -373,37 +369,27 @@ export default class DataTable extends Component {
       'beforeend',
       `
       ${this._phones
-        .map(phone => {
-          return this._generatePhonesListHTML(phone);
-        })
-        .join('')}
-    `
+    .map(phone => this._generatePhonesListHTML(phone)).join('')}
+    `,
     );
   }
 
   _renderTableTitle() {
-    this._table.innerHTML = `<tr>
+    this._table.innerHTML = `
+      <tr>
         <th><input
           data-element="phones-checkbox"
           type="checkbox"
           ${this._mainCheckboxValue ? 'checked' : ''}
           >
-          </th>
-          
-            ${Object.entries(this._config)
-              .map(([key, value]) => {
-                return `
-                        <th ${
-                          value.isSortable ? `data-sortable-key=${key}` : ''
-                        }
-                        >
-                            ${value.title || ''}
-                        </th>
-                    `;
-              })
-              .join('')}
-            
-        </tr>`;
+        </th>
+          ${Object.entries(this._config).map(([key, value]) => `
+        <th ${value.isSortable ? `data-sortable-key=${key}` : ''}
+        >
+          ${value.title || ''}
+        </th>
+        `).join('')}
+      </tr>`;
   }
 
   _renderTableContent() {
@@ -415,7 +401,7 @@ export default class DataTable extends Component {
 
   _render() {
     this._element.innerHTML = `
-       <header class="header">
+      <header class="header">
         <div class="container">
           <div class="header__content">
             <div class="header__logo">Phones.ua</div>
@@ -433,24 +419,24 @@ export default class DataTable extends Component {
                data-value="all"
                class="button header-button-all header-button-active"
                >
-               Show All
+                 Show All
                </button>
               <button
                data-type="filter-selected"
                data-value="checked"
                class="button header-button-selected"
                >
-               Show Selected
+                 Show Selected
                </button>
             </div>
           </div>
         </div>
-      </header>
-      <main class="main">
+        </header>
+        <main class="main">
         <div class="container">
-            <table data-element="phones-block" class="main__table">
-            </table>
-            <div data-component="pagination"></div>
+          <table data-element="phones-block" class="main__table">
+          </table>
+          <div data-component="pagination"></div>
         </div>
       </main>
       `;

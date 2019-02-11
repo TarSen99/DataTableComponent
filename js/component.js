@@ -6,8 +6,8 @@ export default class Component {
   }
 
   on(eventName, selector, callback) {
-    this._element.addEventListener(eventName, e => {
-      let elementToDelegate = e.target;
+    this._element.addEventListener(eventName, (e) => {
+      const elementToDelegate = e.target;
 
       if (!elementToDelegate.closest(selector)) {
         return;
@@ -26,11 +26,11 @@ export default class Component {
   }
 
   emit(eventName, ...args) {
-    if (!this._callbacksMap.hasOwnProperty(eventName)) {
+    if (!(eventName in this._callbacksMap)) {
       return;
     }
 
-    this._callbacksMap[eventName].forEach(callback => {
+    this._callbacksMap[eventName].forEach((callback) => {
       callback(...args);
     });
   }

@@ -1,5 +1,32 @@
 {
   "prettier": {
     "singleQuote": true
+  },
+  "name": "data-table-component",
+  "description": "* [preview](https://tarsen99.github.io/DataTableComponent/)\r * [PR](https://github.com/TarSen99/DataTableComponent/pull/1)",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "lint": "eslint . --ext .js",
+    "lintfix": "eslint . --ext .js --fix",
+    "test": "echo \"Hello world\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TarSen99/DataTableComponent.git"
+  },
+  "keywords": [
+    "dataTableComponent"
+  ],
+  "author": "Taras Seniv",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/TarSen99/DataTableComponent/issues"
+  },
+  "homepage": "https://github.com/TarSen99/DataTableComponent#readme",
+  "devDependencies": {
+    "eslint": "^5.13.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-plugin-import": "^2.16.0"
   }
 }

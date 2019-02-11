@@ -4,18 +4,18 @@ export default class Pagination extends Component {
   constructor({ element, totalItemsCount, itemsPerPage }) {
     super({ element });
 
-    this.on('click', '[data-element="page-button"]', event => {
-      let buttonValue = +event.target.closest('[data-element="page-button"]')
+    this.on('click', '[data-element="page-button"]', (event) => {
+      const buttonValue = +event.target.closest('[data-element="page-button"]')
         .dataset.value;
 
       this._updateCurrentPage(buttonValue);
     });
 
-    this.on('click', '[data-element="switch-button"]', event => {
-      let buttonValue = +event.target.closest('[data-element="switch-button"]')
+    this.on('click', '[data-element="switch-button"]', (event) => {
+      const buttonValue = +event.target.closest('[data-element="switch-button"]')
         .dataset.value;
 
-      let newPage = this._calculateNewPageValue(buttonValue);
+      const newPage = this._calculateNewPageValue(buttonValue);
 
       if (newPage === this._currentPage) {
         return;
@@ -28,16 +28,16 @@ export default class Pagination extends Component {
   }
 
   _updateTextDetails() {
-    let totalItemsCount = this._totalItemsCount;
+    const totalItemsCount = this._totalItemsCount;
     let minItemValue = this._currentPage * this._itemsPerPage + 1;
     let maxItemValue = minItemValue + this._itemsPerPage - 1;
 
     maxItemValue = Math.min(maxItemValue, totalItemsCount);
     minItemValue = Math.min(maxItemValue, minItemValue);
 
-    let minText = this._element.querySelector('[data-element="min-value"]');
-    let maxText = this._element.querySelector('[data-element="max-value"]');
-    let totalText = this._element.querySelector('[data-element="total-value"]');
+    const minText = this._element.querySelector('[data-element="min-value"]');
+    const maxText = this._element.querySelector('[data-element="max-value"]');
+    const totalText = this._element.querySelector('[data-element="total-value"]');
 
     minText.textContent = minItemValue;
     maxText.textContent = maxItemValue;
@@ -46,10 +46,10 @@ export default class Pagination extends Component {
 
   _toggleArrowButtons() {
     const leftPageButton = this._element.querySelector(
-      '[data-element="switch-button"][data-value="-1"]'
+      '[data-element="switch-button"][data-value="-1"]',
     );
     const rightPageButton = this._element.querySelector(
-      '[data-element="switch-button"][data-value="1"]'
+      '[data-element="switch-button"][data-value="1"]',
     );
 
     const minPage = 0;
@@ -101,18 +101,18 @@ export default class Pagination extends Component {
   }
 
   _clearButtonsStyle() {
-    let buttons = [
-      ...this._element.querySelectorAll('[data-element="page-button"]')
+    const buttons = [
+      ...this._element.querySelectorAll('[data-element="page-button"]'),
     ];
 
-    buttons.forEach(button => {
+    buttons.forEach((button) => {
       button.classList.remove('button-pag--active');
     });
   }
 
   _setActiveButtonStyle() {
-    let button = this._element.querySelector(
-      `[data-element="page-button"][data-value="${this._currentPage}"]`
+    const button = this._element.querySelector(
+      `[data-element="page-button"][data-value="${this._currentPage}"]`,
     );
 
     if (!button) {
@@ -142,7 +142,7 @@ export default class Pagination extends Component {
   }
 
   _getButtonsHTML() {
-    let buttons = [];
+    const buttons = [];
 
     for (let i = 0; i < this._buttonsCount; i++) {
       buttons.push(`
@@ -151,7 +151,7 @@ export default class Pagination extends Component {
         data-value="${i}"
         class="button button-pag"
         >
-            ${i + 1}
+          ${i + 1}
         </button>
       `);
     }
@@ -161,31 +161,31 @@ export default class Pagination extends Component {
 
   _render() {
     this._element.innerHTML = `
-        <div class="main__pagination-block">
-          <div class="pagination__text">
-            <span data-element="min-value">6</span>
-             - 
-            <span data-element="max-value">10</span>
-              of
-            <span data-element="total-value">6</span>
-          </div>
-          <div class="pagination__buttons">
-            <button
-             data-element="switch-button"
-             data-value="-1"
-             class="button button-pag"
-             >
-                <
-            </button>
-             ${this._getButtonsHTML()}
-            <button
-             data-element="switch-button"
-             data-value="1"
-             class="button button-pag">
-                 >
-             </button>
-          </div>
+      <div class="main__pagination-block">
+        <div class="pagination__text">
+          <span data-element="min-value">6</span>
+            - 
+          <span data-element="max-value">10</span>
+            of
+          <span data-element="total-value">6</span>
         </div>
+        <div class="pagination__buttons">
+          <button
+           data-element="switch-button"
+           data-value="-1"
+           class="button button-pag"
+           >
+            <
+          </button>
+            ${this._getButtonsHTML()}
+          <button
+           data-element="switch-button"
+           data-value="1"
+           class="button button-pag">
+             >
+           </button>
+        </div>
+      </div>
     `;
   }
 }

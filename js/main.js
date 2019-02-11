@@ -1,33 +1,34 @@
 import DataTable from './components/data-table.js';
 import TableService from './services/table-service.js';
 
-TableService.getAll().then(phones => {
-  let dataTable = new DataTable({
+TableService.getAll().then((phones) => {
+  // eslint-disable-next-line no-unused-vars
+  const dataTable = new DataTable({
     element: document.querySelector('[data-component="table"]'),
-    phones: phones,
+    phones,
 
     columnConfig: {
       imageUrl: {
-        hasPhoto: true
+        hasPhoto: true,
       },
 
       name: {
         title: 'Name',
         isSortable: true,
         isSearchable: true,
-        isEditable: true
+        isEditable: true,
       },
 
       snippet: {
         title: 'Description',
         isSearchable: true,
-        isEditable: true
+        isEditable: true,
       },
 
       age: {
         title: 'Age',
-        isSortable: true
-      }
-    }
+        isSortable: true,
+      },
+    },
   });
 });
