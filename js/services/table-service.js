@@ -4,13 +4,11 @@ const TableService = {
   async _getDataFromServer(url) {
     const response = await fetch(url);
 
-    // eslint-disable-next-line no-return-await
-    return await response.json();
+    return response.json();
   },
 
   async getAll() {
-    // eslint-disable-next-line no-return-await
-    return await this._getDataFromServer(PHONES_URL);
+    return this._getDataFromServer(PHONES_URL);
   },
 };
 

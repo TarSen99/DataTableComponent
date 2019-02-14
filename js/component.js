@@ -34,4 +34,14 @@ export default class Component {
       callback(...args);
     });
   }
+
+  _getElement(selector, parentElement) {
+    const parent = parentElement || this._element;
+
+    return parent.querySelector(`[data-element=${selector}]`);
+  }
+
+  _getComponent(selector) {
+    return this._element.querySelector(`[data-component=${selector}]`);
+  }
 }

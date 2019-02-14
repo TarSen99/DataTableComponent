@@ -14,10 +14,6 @@ export default class DataTable extends Component {
     this._phonesLength = phones.length;
 
     this._init(phones);
-    this._initListeners();
-    this._initSubscribes();
-
-    this._makeFiltering();
   }
 
   _init(phones) {
@@ -27,83 +23,17 @@ export default class DataTable extends Component {
 
     this._render();
 
-    this._paginationSelector = new PaginationSelector({
-      element: this._element.querySelector(
-        '[data-component="pagination-selector"]',
-      ),
-      options: [3, 5, 10, 15, 20],
-      defaultValue: 5,
-    });
+    this._initFilter();
+    this._initPagination();
+    this._initPhonesCheckbox();
+    this._initFieldsEditing();
 
-    this._pagination = new Pagination({
-      element: this._element.querySelector('[data-component="pagination"]'),
-      totalItemsCount: this.getItemsCount(),
-      itemsPerPage: this._paginationSelector.getPerPage(),
-    });
-
-    this._filterInput = this._element.querySelector(
-      '[data-element="find-input"]',
-    );
+    this._makeFiltering();
   }
 
-  _initSubscribes() {
-    this.subscribe(
-      'input-enter',
-      this._debounce(() => {
-        this._pagination.resetCurrentPage();
-        this._makeFiltering();
+  _initFilter() {
+    this._filterInput = this._getElement('find-input');
 
-        this._pagination.updateOptions(
-          this._paginationSelector.getPerPage(),
-          this.getItemsCount(),
-        );
-      }, 500),
-    );
-
-    this.subscribe('order-enter', this._makeFiltering.bind(this));
-
-    this._paginationSelector.subscribe('change-per-page', () => {
-      this._pagination.updateOptions(
-        this._paginationSelector.getPerPage(),
-        this.getItemsCount(),
-      );
-
-      this._makeFiltering();
-    });
-
-    this._pagination.subscribe('page-changed', () => {
-      this._makeFiltering();
-    });
-
-    this.subscribe('phone-checkbox-change', (id, currCheckState) => {
-      const currPhoneInfo = this._getArrayPhoneItemDetails(id);
-      currPhoneInfo.isChecked = currCheckState;
-      this._updateMainCheckValue();
-
-      this._renderTableContent();
-    });
-
-    this.subscribe('phones-checkbox-change', (currCheckState) => {
-      this._phones = this._phones.map((phoneInfo) => {
-        // eslint-disable-next-line no-param-reassign
-        phoneInfo.isChecked = currCheckState;
-
-        return phoneInfo;
-      });
-
-      this._renderTableContent();
-    });
-  }
-
-  _getArrayPhoneItemDetails(id) {
-    return this._defaultPhones.find(phone => phone.id === id);
-  }
-
-  _updateMainCheckValue() {
-    this._mainCheckboxValue = this._phones.every(phone => phone.isChecked);
-  }
-
-  _initListeners() {
     this.on('click', '[data-type="filter-selected"]', (event) => {
       this._clearCheckButtonsStyle();
 
@@ -114,26 +44,10 @@ export default class DataTable extends Component {
       this._pagination.resetCurrentPage();
       this._makeFiltering();
 
-      this._pagination.updateOptions(
-        this._paginationSelector.getPerPage(),
-        this.getItemsCount(),
-      );
-    });
-
-    this.on('change', '[data-element="phone-checkbox"]', (event) => {
-      const currCheckState = event.target.closest(
-        '[data-element="phone-checkbox"]',
-      ).checked;
-      const itemId = event.target.closest('[data-element="phone-item"]').dataset
-        .id;
-
-      this.emit('phone-checkbox-change', itemId, currCheckState);
-    });
-
-    this.on('change', '[data-element="phones-checkbox"]', () => {
-      this._mainCheckboxValue = !this._mainCheckboxValue;
-
-      this.emit('phones-checkbox-change', this._mainCheckboxValue);
+      this._pagination.updateOptions({
+        perPage: this._paginationSelector.getPerPage(),
+        totalItemsCount: this.getItemsCount(),
+      });
     });
 
     this.on('input', '[data-element="find-input"]', () => {
@@ -153,6 +67,87 @@ export default class DataTable extends Component {
       this.emit('order-enter');
     });
 
+    this.subscribe(
+      'input-enter',
+      this._debounce(() => {
+        this._pagination.resetCurrentPage();
+        this._makeFiltering();
+
+        this._pagination.updateOptions({
+          perPage: this._paginationSelector.getPerPage(),
+          totalItemsCount: this.getItemsCount(),
+        });
+      }, 500),
+    );
+
+    this.subscribe('order-enter', this._makeFiltering.bind(this));
+  }
+
+  _initPagination() {
+    this._paginationSelector = new PaginationSelector({
+      element: this._getComponent('pagination-selector'),
+      options: [3, 5, 10, 15, 20],
+      defaultValue: 5,
+    });
+
+    this._pagination = new Pagination({
+      element: this._getComponent('pagination'),
+      totalItemsCount: this.getItemsCount(),
+      itemsPerPage: this._paginationSelector.getPerPage(),
+    });
+
+    this._paginationSelector.subscribe('change-per-page', () => {
+      this._pagination.updateOptions({
+        perPage: this._paginationSelector.getPerPage(),
+        totalItemsCount: this.getItemsCount(),
+      });
+
+      this._makeFiltering();
+    });
+
+    this._pagination.subscribe('page-changed', () => {
+      this._makeFiltering();
+    });
+  }
+
+  _initPhonesCheckbox() {
+    this.on('change', '[data-element="phone-checkbox"]', (event) => {
+      const phoneItem = event.target.closest('[data-element="phone-item"]');
+      const phoneCheckbox = event.target.closest(
+        '[data-element="phone-checkbox"]',
+      );
+
+      const itemId = phoneItem.dataset.id;
+      const currCheckState = phoneCheckbox.checked;
+
+      this.emit('phone-checkbox-change', itemId, currCheckState);
+    });
+
+    this.on('change', '[data-element="phones-checkbox"]', () => {
+      this._mainCheckboxValue = !this._mainCheckboxValue;
+
+      this.emit('phones-checkbox-change', this._mainCheckboxValue);
+    });
+
+    this.subscribe('phone-checkbox-change', (id, currCheckState) => {
+      const currPhoneInfo = this._getPhoneDetailsFromArray(id);
+      currPhoneInfo.isChecked = currCheckState;
+      this._updateMainCheckValue();
+
+      this._renderTableContent();
+    });
+
+    this.subscribe('phones-checkbox-change', (currCheckState) => {
+      this._phones.forEach((phoneInfo) => {
+        // eslint-disable-next-line no-param-reassign
+        phoneInfo.isChecked = currCheckState;
+      });
+
+      this._renderTableContent();
+    });
+  }
+
+  _initFieldsEditing() {
     this.on('dblclick', '[data-edit="false"]', (event) => {
       const target = event.target.closest('[data-edit="false"]');
 
@@ -161,7 +156,7 @@ export default class DataTable extends Component {
 
     this.on('focusout', '[data-element="input-area"]', () => {
       setTimeout(() => {
-        this._endInputEditing('ok', 'focusout');
+        this._endInputEditing('ok');
       }, 0);
     });
 
@@ -174,21 +169,26 @@ export default class DataTable extends Component {
     });
   }
 
+  _getPhoneDetailsFromArray(id) {
+    return this._defaultPhones.find(phone => phone.id === id);
+  }
+
+  _updateMainCheckValue() {
+    this._mainCheckboxValue = this._phones.every(phone => phone.isChecked);
+  }
+
   _endInputEditing(state) {
-    const editableBlock = this._element.querySelector(
-      '[data-element="editable-block" ]',
-    );
+    const editableBlock = this._getElement('editable-block');
 
     if (!editableBlock) {
       return;
     }
 
     const currField = editableBlock.closest('[data-element="detail-container"]');
-    const editableField = editableBlock.querySelector(
-      '[data-element="input-area"]',
-    );
-    const parentRowId = editableBlock.closest('[data-element="phone-item"]')
-      .dataset.id;
+    const editableField = this._getElement('input-area', editableBlock);
+
+    const parentRow = editableBlock.closest('[data-element="phone-item"]');
+    const parentRowId = parentRow.dataset.id;
 
     currField.dataset.edit = 'false';
     const editableFieldValue = editableField.value;
@@ -196,7 +196,7 @@ export default class DataTable extends Component {
     if (state === 'ok') {
       currField.textContent = editableFieldValue;
 
-      const ArrayItemFiled = this._getArrayPhoneItemDetails(parentRowId);
+      const ArrayItemFiled = this._getPhoneDetailsFromArray(parentRowId);
       const arrayFieldName = currField.dataset.type;
 
       ArrayItemFiled[arrayFieldName] = editableFieldValue;
@@ -225,7 +225,7 @@ export default class DataTable extends Component {
            `,
     );
 
-    const inputField = field.querySelector('[data-element="input-area"]');
+    const inputField = this._getElement('input-area', field);
     inputField.focus();
   }
 
@@ -336,27 +336,29 @@ export default class DataTable extends Component {
   _generatePhonesListHTML(phone) {
     return `
       <tr
-      data-element="phone-item"
-      data-id="${phone.id}"
+        data-element="phone-item"
+        data-id="${phone.id}"
       >
-        <td><input
-          data-element="phone-checkbox"
-          type="checkbox"
-          ${phone.isChecked ? 'checked' : ''} 
-          >
+        <td>
+          <input
+              data-element="phone-checkbox"
+              type="checkbox"
+              ${phone.isChecked ? 'checked' : ''} 
+            >
         </td>
+        
         ${Object.entries(this._config).map(([key, value]) => ` 
         ${value.hasPhoto ? `
         <td 
-        data-element="detail-container"
+          data-element="detail-container"
         >
           <img src="${phone[key]}">
         </td>` : `
         <td 
-        data-element="detail-container"
-        data-type="${key}"
-        ${value.isSearchable ? 'data-searchable' : ''}
-        ${value.isEditable ? 'data-edit="false"' : ''}
+          data-element="detail-container"
+          data-type="${key}"
+          ${value.isSearchable ? 'data-searchable' : ''}
+          ${value.isEditable ? 'data-edit="false"' : ''}
         >
           ${phone[key]}
         </td>`}
@@ -377,23 +379,26 @@ export default class DataTable extends Component {
   _renderTableTitle() {
     this._table.innerHTML = `
       <tr>
-        <th><input
-          data-element="phones-checkbox"
-          type="checkbox"
-          ${this._mainCheckboxValue ? 'checked' : ''}
+        <th>
+          <input
+            data-element="phones-checkbox"
+            type="checkbox"
+            ${this._mainCheckboxValue ? 'checked' : ''}
           >
         </th>
+        
           ${Object.entries(this._config).map(([key, value]) => `
-        <th ${value.isSortable ? `data-sortable-key=${key}` : ''}
-        >
-          ${value.title || ''}
-        </th>
-        `).join('')}
+          <th 
+              ${value.isSortable ? `data-sortable-key=${key}` : ''}
+          >
+            ${value.title || ''}
+          </th>
+            `).join('')}
       </tr>`;
   }
 
   _renderTableContent() {
-    this._table = this._element.querySelector('[data-element="phones-block"]');
+    this._table = this._getElement('phones-block');
 
     this._renderTableTitle();
     this._renderPhones();

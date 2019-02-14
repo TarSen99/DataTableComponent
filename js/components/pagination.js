@@ -24,7 +24,10 @@ export default class Pagination extends Component {
       this._updateCurrentPage(newPage);
     });
 
-    this.updateOptions(itemsPerPage, totalItemsCount);
+    this.updateOptions({
+      perPage: itemsPerPage,
+      totalItemsCount,
+    });
   }
 
   _updateTextDetails() {
@@ -126,7 +129,7 @@ export default class Pagination extends Component {
     this._currentPage = 0;
   }
 
-  updateOptions(perPage, totalItemsCount) {
+  updateOptions({ perPage, totalItemsCount }) {
     this._itemsPerPage = perPage;
     this._totalItemsCount = totalItemsCount;
     this._buttonsCount = Math.ceil(this._totalItemsCount / this._itemsPerPage);
