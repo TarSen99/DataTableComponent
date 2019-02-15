@@ -1,8 +1,32 @@
 export default class Component {
   constructor({ element }) {
     this._element = element;
+    this._props = {};
+    this._state = {};
 
     this._callbacksMap = {};
+  }
+
+  updateProps(props) {
+    this._props = {
+      ...this._props,
+      ...props,
+    };
+
+    this._updateView();
+  }
+
+  _updateState(state) {
+    this._state = {
+      ...this._state,
+      ...state,
+    };
+
+    this._updateView();
+  }
+
+  _updateView() {
+    console.log('add updateView method');
   }
 
   on(eventName, selector, callback) {

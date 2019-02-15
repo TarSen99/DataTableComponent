@@ -5,23 +5,37 @@ import PaginationSelector from './pagination-selector.js';
 export default class DataTable extends Component {
   constructor({ element, phones, columnConfig }) {
     super({ element });
-    this._config = columnConfig;
-    this._filterValue = '';
-    this._selectedFilter = 'all';
-    this._orderValue = 'up';
-    this._orderName = '';
-    this._mainCheckboxValue = false;
-    this._phonesLength = phones.length;
 
-    this._init(phones);
-  }
-
-  _init(phones) {
-    this._defaultPhones = phones;
-    this._defaultPhones = this._addCheckFieldToItems(this._defaultPhones);
-    this._phones = this._defaultPhones;
+    this._props = {
+      config: columnConfig,
+      defaultPhones: phones,
+      phonesLength: phones.length,
+      phones,
+    };
 
     this._render();
+    this._init();
+  }
+
+  _init() {
+    const defaultPerPage = 5;
+
+    this._state = {
+      filterValue: '',
+      selectedFilter: 'all',
+      orderValue: 'up',
+      orderName: '',
+      mainCheckboxValue: false,
+      currentPage: 0,
+      totalItemsCount: this.getItemsCount(),
+      itemsPerPage: defaultPerPage,
+      buttonsCount: Math.ceil(this.getItemsCount() / defaultPerPage),
+    };
+
+    let { defaultPhones } = this._props;
+
+    defaultPhones = this._addCheckFieldToItems(defaultPhones);
+    this.updateProps({ defaultPhones });
 
     this._initFilter();
     this._initPagination();
@@ -39,12 +53,14 @@ export default class DataTable extends Component {
 
       const btn = event.target.closest('[data-type="filter-selected"]');
       btn.classList.add('header-button-active');
-      this._selectedFilter = btn.dataset.value;
+      const selectedFilter = btn.dataset.value;
 
-      this._pagination.resetCurrentPage();
+      this._updateState({ selectedFilter });
+
+      this._resetCurrentPage();
       this._makeFiltering();
 
-      this._pagination.updateOptions({
+      this._pagination.updateProps({
         perPage: this._paginationSelector.getPerPage(),
         totalItemsCount: this.getItemsCount(),
       });
@@ -55,25 +71,28 @@ export default class DataTable extends Component {
     });
 
     this.on('click', '[data-sortable-key]', (event) => {
-      const currOrderName = event.target.closest('[data-sortable-key]').dataset
-        .sortableKey;
+      const element = event.target.closest('[data-sortable-key]');
+      const currOrderName = element.dataset.sortableKey;
 
-      if (this._orderName === currOrderName) {
-        this._orderValue = this._orderValue === 'up' ? 'down' : 'up';
+      let { orderName, orderValue } = this._state;
+
+      if (orderName === currOrderName) {
+        orderValue = orderValue === 'up' ? 'down' : 'up';
       } else {
-        this._orderName = currOrderName;
+        orderName = currOrderName;
       }
 
+      this._updateState({ orderValue, orderName });
       this.emit('order-enter');
     });
 
     this.subscribe(
       'input-enter',
       this._debounce(() => {
-        this._pagination.resetCurrentPage();
+        this._resetCurrentPage();
         this._makeFiltering();
 
-        this._pagination.updateOptions({
+        this._pagination.updateProps({
           perPage: this._paginationSelector.getPerPage(),
           totalItemsCount: this.getItemsCount(),
         });
@@ -90,22 +109,38 @@ export default class DataTable extends Component {
       defaultValue: 5,
     });
 
+    const {
+      totalItemsCount,
+      itemsPerPage,
+      buttonsCount,
+      currentPage,
+    } = this._state;
+
     this._pagination = new Pagination({
       element: this._getComponent('pagination'),
-      totalItemsCount: this.getItemsCount(),
-      itemsPerPage: this._paginationSelector.getPerPage(),
+      props: {
+        totalItemsCount,
+        itemsPerPage,
+        buttonsCount,
+        currentPage,
+      },
     });
 
     this._paginationSelector.subscribe('change-per-page', () => {
-      this._pagination.updateOptions({
-        perPage: this._paginationSelector.getPerPage(),
-        totalItemsCount: this.getItemsCount(),
+      this._pagination.updateProps({
+        totalItemsCount,
+        itemsPerPage,
+        buttonsCount,
+        currentPage,
       });
 
       this._makeFiltering();
     });
 
-    this._pagination.subscribe('page-changed', () => {
+    this._pagination.subscribe('page-changed', (newPage) => {
+      this._updateCurrentPage(newPage);
+      this._pagination.updateProps({ currentPage: newPage });
+
       this._makeFiltering();
     });
   }
@@ -124,26 +159,33 @@ export default class DataTable extends Component {
     });
 
     this.on('change', '[data-element="phones-checkbox"]', () => {
-      this._mainCheckboxValue = !this._mainCheckboxValue;
+      let { mainCheckboxValue } = this._state;
 
-      this.emit('phones-checkbox-change', this._mainCheckboxValue);
+      mainCheckboxValue = !mainCheckboxValue;
+
+      this._updateState({ mainCheckboxValue });
+
+      this.emit('phones-checkbox-change', mainCheckboxValue);
     });
 
     this.subscribe('phone-checkbox-change', (id, currCheckState) => {
       const currPhoneInfo = this._getPhoneDetailsFromArray(id);
       currPhoneInfo.isChecked = currCheckState;
-      this._updateMainCheckValue();
+      const { phones } = this._props;
+      const mainCheckboxValue = this._getMainCheckValue(phones);
 
-      this._renderTableContent();
+      this._updateState({ mainCheckboxValue });
     });
 
     this.subscribe('phones-checkbox-change', (currCheckState) => {
-      this._phones.forEach((phoneInfo) => {
+      const { phones } = this._props;
+
+      phones.forEach((phoneInfo) => {
         // eslint-disable-next-line no-param-reassign
         phoneInfo.isChecked = currCheckState;
       });
 
-      this._renderTableContent();
+      this.updateProps({ phones });
     });
   }
 
@@ -170,11 +212,23 @@ export default class DataTable extends Component {
   }
 
   _getPhoneDetailsFromArray(id) {
-    return this._defaultPhones.find(phone => phone.id === id);
+    const { defaultPhones } = this._props;
+
+    return defaultPhones.find(phone => phone.id === id);
   }
 
-  _updateMainCheckValue() {
-    this._mainCheckboxValue = this._phones.every(phone => phone.isChecked);
+  _getMainCheckValue(phones) {
+    return phones.every(phone => phone.isChecked);
+  }
+
+  _resetCurrentPage() {
+    const currentPage = 0;
+
+    this._updateState({ currentPage });
+  }
+
+  _updateCurrentPage(currentPage) {
+    this._updateState({ currentPage });
   }
 
   _endInputEditing(state) {
@@ -240,7 +294,9 @@ export default class DataTable extends Component {
   }
 
   getItemsCount() {
-    return this._phonesLength;
+    const { phonesLength } = this._props;
+
+    return phonesLength;
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -266,7 +322,9 @@ export default class DataTable extends Component {
   }
 
   _filterSelectedItems(phones) {
-    if (this._selectedFilter === 'checked') {
+    const { selectedFilter } = this._state;
+
+    if (selectedFilter === 'checked') {
       // eslint-disable-next-line no-param-reassign
       phones = phones.filter(phone => phone.isChecked);
     }
@@ -274,66 +332,79 @@ export default class DataTable extends Component {
     return phones;
   }
 
-  _sortPhones() {
-    this._phones.sort((a, b) => {
-      if (this._orderValue === 'up') {
-        if (a[this._orderName] > b[this._orderName]) {
+  _sortPhones(phones) {
+    const { orderValue, orderName } = this._state;
+
+    return phones.sort((a, b) => {
+      if (orderValue === 'up') {
+        if (a[orderName] > b[orderName]) {
           return 1;
         }
         return -1;
       }
 
-      if (a[this._orderName] < b[this._orderName]) {
+      if (a[orderName] < b[orderName]) {
         return 1;
       }
       return -1;
     });
   }
 
-  _getItemsOfCurrentPage() {
-    const currPage = this._pagination.getCurrentPage();
-    const perPage = this._paginationSelector.getPerPage();
+  _getItemsOfCurrentPage(phones) {
+    const { currentPage, itemsPerPage } = this._state;
 
-    this._phones = this._phones.filter((phone, index) => (
-      index >= currPage * perPage && index < currPage * perPage + perPage
+    return phones.filter((phone, index) => (
+      index >= currentPage * itemsPerPage && index < currentPage * itemsPerPage + itemsPerPage
     ));
   }
 
   _makeFiltering() {
     const searchableFields = this._getSearchableFieldNames();
-    this._filterValue = this._filterInput.value.toLowerCase().trim();
+    const filterValue = this._filterInput.value.toLowerCase().trim();
+
     // eslint-disable-next-line no-restricted-syntax
-    this._phones = this._filterSelectedItems(this._defaultPhones);
+    const { defaultPhones } = this._props;
+    let phones = this._filterSelectedItems(defaultPhones);
 
     // eslint-disable-next-line array-callback-return
-    this._phones = this._phones.filter((phone) => { // eslint-disable-line consistent-return
+    phones = phones.filter((phone) => { // eslint-disable-line consistent-return
       // eslint-disable-next-line no-restricted-syntax
       for (const fieldName of searchableFields) {
         const currPhoneValue = phone[fieldName].toLowerCase().trim();
 
-        if (currPhoneValue.includes(this._filterValue)) {
+        if (currPhoneValue.includes(filterValue)) {
           return true;
         }
       }
     });
 
-    this._phonesLength = this._phones.length;
+    phones = this._sortPhones(phones);
+    phones = this._getItemsOfCurrentPage(phones);
+    const mainCheckboxValue = this._getMainCheckValue(phones);
 
-    this._sortPhones();
-    this._getItemsOfCurrentPage();
+    this._updateState({
+      filterValue,
+      mainCheckboxValue,
+    });
 
-    this._updateMainCheckValue();
-    this._renderTableContent();
+    this.updateProps({
+      phonesLength: phones.length,
+      phones,
+    });
   }
 
   _getSearchableFieldNames() {
-    return Object.entries(this._config)
+    const { config } = this._props;
+
+    return Object.entries(config)
     // eslint-disable-next-line no-unused-vars
       .filter(([key, value]) => value.isSearchable)
       .map(([key]) => key);
   }
 
   _generatePhonesListHTML(phone) {
+    const { config } = this._props;
+
     return `
       <tr
         data-element="phone-item"
@@ -344,10 +415,10 @@ export default class DataTable extends Component {
               data-element="phone-checkbox"
               type="checkbox"
               ${phone.isChecked ? 'checked' : ''} 
-            >
+          >
         </td>
         
-        ${Object.entries(this._config).map(([key, value]) => ` 
+        ${Object.entries(config).map(([key, value]) => ` 
         ${value.hasPhoto ? `
         <td 
           data-element="detail-container"
@@ -367,16 +438,20 @@ export default class DataTable extends Component {
   }
 
   _renderPhones() {
+    const { phones } = this._props;
+
     this._table.insertAdjacentHTML(
       'beforeend',
       `
-      ${this._phones
+      ${phones
     .map(phone => this._generatePhonesListHTML(phone)).join('')}
     `,
     );
   }
 
   _renderTableTitle() {
+    const { config } = this._props;
+
     this._table.innerHTML = `
       <tr>
         <th>
@@ -387,7 +462,7 @@ export default class DataTable extends Component {
           >
         </th>
         
-          ${Object.entries(this._config).map(([key, value]) => `
+          ${Object.entries(config).map(([key, value]) => `
           <th 
               ${value.isSortable ? `data-sortable-key=${key}` : ''}
           >
@@ -402,6 +477,10 @@ export default class DataTable extends Component {
 
     this._renderTableTitle();
     this._renderPhones();
+  }
+
+  _updateView() {
+    this._renderTableContent();
   }
 
   _render() {

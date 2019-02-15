@@ -96,10 +96,13 @@
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return Component; });
-/* harmony import */ var _babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/classCallCheck */ "./node_modules/@babel/runtime/helpers/classCallCheck.js");
-/* harmony import */ var _babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @babel/runtime/helpers/createClass */ "./node_modules/@babel/runtime/helpers/createClass.js");
-/* harmony import */ var _babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _babel_runtime_helpers_objectSpread__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/objectSpread */ "./node_modules/@babel/runtime/helpers/objectSpread.js");
+/* harmony import */ var _babel_runtime_helpers_objectSpread__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_babel_runtime_helpers_objectSpread__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @babel/runtime/helpers/classCallCheck */ "./node_modules/@babel/runtime/helpers/classCallCheck.js");
+/* harmony import */ var _babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @babel/runtime/helpers/createClass */ "./node_modules/@babel/runtime/helpers/createClass.js");
+/* harmony import */ var _babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_2__);
+
 
 
 
@@ -109,13 +112,34 @@ function () {
   function Component(_ref) {
     var element = _ref.element;
 
-    _babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_0___default()(this, Component);
+    _babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_1___default()(this, Component);
 
     this._element = element;
+    this._props = {};
+    this._state = {};
     this._callbacksMap = {};
   }
 
-  _babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_1___default()(Component, [{
+  _babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_2___default()(Component, [{
+    key: "updateProps",
+    value: function updateProps(props) {
+      this._props = _babel_runtime_helpers_objectSpread__WEBPACK_IMPORTED_MODULE_0___default()({}, this._props, props);
+
+      this._updateView();
+    }
+  }, {
+    key: "_updateState",
+    value: function _updateState(state) {
+      this._state = _babel_runtime_helpers_objectSpread__WEBPACK_IMPORTED_MODULE_0___default()({}, this._state, state);
+
+      this._updateView();
+    }
+  }, {
+    key: "_updateView",
+    value: function _updateView() {
+      console.log('add updateView method');
+    }
+  }, {
     key: "on",
     value: function on(eventName, selector, callback) {
       this._element.addEventListener(eventName, function (e) {
@@ -227,27 +251,45 @@ function (_Component) {
     _this = _babel_runtime_helpers_possibleConstructorReturn__WEBPACK_IMPORTED_MODULE_4___default()(this, _babel_runtime_helpers_getPrototypeOf__WEBPACK_IMPORTED_MODULE_5___default()(DataTable).call(this, {
       element: element
     }));
-    _this._config = columnConfig;
-    _this._filterValue = '';
-    _this._selectedFilter = 'all';
-    _this._orderValue = 'up';
-    _this._orderName = '';
-    _this._mainCheckboxValue = false;
-    _this._phonesLength = phones.length;
+    /*
+    this._config = columnConfig;
+    this._filterValue = '';
+    this._selectedFilter = 'all';
+    this._orderValue = 'up';
+    this._orderName = '';
+    this._mainCheckboxValue = false;
+    this._phonesLength = phones.length;
+    */
 
-    _this._init(phones);
+    _this._props = {
+      config: columnConfig,
+      defaultPhones: phones,
+      phones: phones,
+      phonesLength: phones.length
+    };
+
+    _this._render();
+
+    _this._init();
 
     return _this;
   }
 
   _babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_3___default()(DataTable, [{
     key: "_init",
-    value: function _init(phones) {
-      this._defaultPhones = phones;
-      this._defaultPhones = this._addCheckFieldToItems(this._defaultPhones);
-      this._phones = this._defaultPhones;
-
-      this._render();
+    value: function _init() {
+      this._state = {
+        filterValue: '',
+        selectedFilter: 'all',
+        orderValue: 'up',
+        orderName: '',
+        mainCheckboxValue: false
+      };
+      var defaultPhones = this._props.defaultPhones;
+      defaultPhones = this._addCheckFieldToItems(defaultPhones);
+      this.updateProps({
+        defaultPhones: defaultPhones
+      });
 
       this._initFilter();
 
@@ -270,7 +312,11 @@ function (_Component) {
 
         var btn = event.target.closest('[data-type="filter-selected"]');
         btn.classList.add('header-button-active');
-        _this2._selectedFilter = btn.dataset.value;
+        var selectedFilter = btn.dataset.value;
+
+        _this2.updateProps({
+          selectedFilter: selectedFilter
+        });
 
         _this2._pagination.resetCurrentPage();
 
@@ -286,12 +332,20 @@ function (_Component) {
       });
       this.on('click', '[data-sortable-key]', function (event) {
         var currOrderName = event.target.closest('[data-sortable-key]').dataset.sortableKey;
+        var _this2$_state = _this2._state,
+            orderName = _this2$_state.orderName,
+            orderValue = _this2$_state.orderValue;
 
-        if (_this2._orderName === currOrderName) {
-          _this2._orderValue = _this2._orderValue === 'up' ? 'down' : 'up';
+        if (orderName === currOrderName) {
+          orderValue = orderValue === 'up' ? 'down' : 'up';
         } else {
-          _this2._orderName = currOrderName;
+          orderName = currOrderName;
         }
+
+        _this2._updateState({
+          orderValue: orderValue,
+          orderName: orderName
+        });
 
         _this2.emit('order-enter');
       });
@@ -350,26 +404,34 @@ function (_Component) {
         _this4.emit('phone-checkbox-change', itemId, currCheckState);
       });
       this.on('change', '[data-element="phones-checkbox"]', function () {
-        _this4._mainCheckboxValue = !_this4._mainCheckboxValue;
+        var mainCheckboxValue = _this4._state.mainCheckboxValue;
+        mainCheckboxValue = !mainCheckboxValue;
 
-        _this4.emit('phones-checkbox-change', _this4._mainCheckboxValue);
+        _this4._updateState({
+          mainCheckboxValue: mainCheckboxValue
+        });
+
+        _this4.emit('phones-checkbox-change', mainCheckboxValue);
       });
       this.subscribe('phone-checkbox-change', function (id, currCheckState) {
         var currPhoneInfo = _this4._getPhoneDetailsFromArray(id);
 
         currPhoneInfo.isChecked = currCheckState;
 
-        _this4._updateMainCheckValue();
+        _this4._getMainCheckValue();
 
-        _this4._renderTableContent();
+        _this4._updateView();
       });
       this.subscribe('phones-checkbox-change', function (currCheckState) {
-        _this4._phones.forEach(function (phoneInfo) {
+        var phones = _this4._props.phones;
+        phones.forEach(function (phoneInfo) {
           // eslint-disable-next-line no-param-reassign
           phoneInfo.isChecked = currCheckState;
         });
 
-        _this4._renderTableContent();
+        _this4.updateProps({
+          phones: phones
+        });
       });
     }
   }, {
@@ -398,14 +460,15 @@ function (_Component) {
   }, {
     key: "_getPhoneDetailsFromArray",
     value: function _getPhoneDetailsFromArray(id) {
-      return this._defaultPhones.find(function (phone) {
+      var defaultPhones = this._props.defaultPhones;
+      return defaultPhones.find(function (phone) {
         return phone.id === id;
       });
     }
   }, {
-    key: "_updateMainCheckValue",
-    value: function _updateMainCheckValue() {
-      this._mainCheckboxValue = this._phones.every(function (phone) {
+    key: "_getMainCheckValue",
+    value: function _getMainCheckValue(phones) {
+      return phones.every(function (phone) {
         return phone.isChecked;
       });
     }
@@ -463,7 +526,8 @@ function (_Component) {
   }, {
     key: "getItemsCount",
     value: function getItemsCount() {
-      return this._phonesLength;
+      var itemsLength = this._props.itemsLength;
+      return itemsLength;
     } // eslint-disable-next-line class-methods-use-this
 
   }, {
@@ -500,19 +564,20 @@ function (_Component) {
     }
   }, {
     key: "_sortPhones",
-    value: function _sortPhones() {
-      var _this6 = this;
-
-      this._phones.sort(function (a, b) {
-        if (_this6._orderValue === 'up') {
-          if (a[_this6._orderName] > b[_this6._orderName]) {
+    value: function _sortPhones(phones) {
+      var _this$_state = this._state,
+          orderValue = _this$_state.orderValue,
+          orderName = _this$_state.orderName;
+      return phones.sort(function (a, b) {
+        if (orderValue === 'up') {
+          if (a[orderName] > b[orderName]) {
             return 1;
           }
 
           return -1;
         }
 
-        if (a[_this6._orderName] < b[_this6._orderName]) {
+        if (a[orderName] < b[orderName]) {
           return 1;
         }
 
@@ -521,27 +586,29 @@ function (_Component) {
     }
   }, {
     key: "_getItemsOfCurrentPage",
-    value: function _getItemsOfCurrentPage() {
+    value: function _getItemsOfCurrentPage(phones) {
       var currPage = this._pagination.getCurrentPage();
 
       var perPage = this._paginationSelector.getPerPage();
 
-      this._phones = this._phones.filter(function (phone, index) {
+      return phones.filter(function (phone, index) {
         return index >= currPage * perPage && index < currPage * perPage + perPage;
       });
     }
   }, {
     key: "_makeFiltering",
     value: function _makeFiltering() {
-      var _this7 = this;
-
       var searchableFields = this._getSearchableFieldNames();
 
-      this._filterValue = this._filterInput.value.toLowerCase().trim(); // eslint-disable-next-line no-restricted-syntax
+      var filterValue = this._filterInput.value.toLowerCase().trim(); // eslint-disable-next-line no-restricted-syntax
 
-      this._phones = this._filterSelectedItems(this._defaultPhones); // eslint-disable-next-line array-callback-return
 
-      this._phones = this._phones.filter(function (phone) {
+      var defaultPhones = this._props.defaultPhones;
+
+      var phones = this._filterSelectedItems(defaultPhones); // eslint-disable-next-line array-callback-return
+
+
+      phones = phones.filter(function (phone) {
         // eslint-disable-line consistent-return
         // eslint-disable-next-line no-restricted-syntax
         var _iteratorNormalCompletion = true;
@@ -553,7 +620,7 @@ function (_Component) {
             var fieldName = _step.value;
             var currPhoneValue = phone[fieldName].toLowerCase().trim();
 
-            if (currPhoneValue.includes(_this7._filterValue)) {
+            if (currPhoneValue.includes(filterValue)) {
               return true;
             }
           }
@@ -572,20 +639,26 @@ function (_Component) {
           }
         }
       });
-      this._phonesLength = this._phones.length;
+      phones = this._sortPhones(phones);
+      phones = this._getItemsOfCurrentPage(phones);
 
-      this._sortPhones();
+      var mainCheckboxValue = this._getMainCheckValue();
 
-      this._getItemsOfCurrentPage();
+      this._updateState({
+        filterValue: filterValue,
+        mainCheckboxValue: mainCheckboxValue
+      });
 
-      this._updateMainCheckValue();
-
-      this._renderTableContent();
+      this.updateProps({
+        phonesLength: phones.length,
+        phones: phones
+      });
     }
   }, {
     key: "_getSearchableFieldNames",
     value: function _getSearchableFieldNames() {
-      return Object.entries(this._config) // eslint-disable-next-line no-unused-vars
+      var config = this._props.config;
+      return Object.entries(config) // eslint-disable-next-line no-unused-vars
       .filter(function (_ref2) {
         var _ref3 = _babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_0___default()(_ref2, 2),
             key = _ref3[0],
@@ -602,7 +675,8 @@ function (_Component) {
   }, {
     key: "_generatePhonesListHTML",
     value: function _generatePhonesListHTML(phone) {
-      return "\n      <tr\n        data-element=\"phone-item\"\n        data-id=\"".concat(phone.id, "\"\n      >\n        <td>\n          <input\n              data-element=\"phone-checkbox\"\n              type=\"checkbox\"\n              ").concat(phone.isChecked ? 'checked' : '', " \n            >\n        </td>\n        \n        ").concat(Object.entries(this._config).map(function (_ref6) {
+      var config = this._props.config;
+      return "\n      <tr\n        data-element=\"phone-item\"\n        data-id=\"".concat(phone.id, "\"\n      >\n        <td>\n          <input\n              data-element=\"phone-checkbox\"\n              type=\"checkbox\"\n              ").concat(phone.isChecked ? 'checked' : '', " \n            >\n        </td>\n        \n        ").concat(Object.entries(config).map(function (_ref6) {
         var _ref7 = _babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_0___default()(_ref6, 2),
             key = _ref7[0],
             value = _ref7[1];
@@ -613,16 +687,19 @@ function (_Component) {
   }, {
     key: "_renderPhones",
     value: function _renderPhones() {
-      var _this8 = this;
+      var _this6 = this;
 
-      this._table.insertAdjacentHTML('beforeend', "\n      ".concat(this._phones.map(function (phone) {
-        return _this8._generatePhonesListHTML(phone);
+      var phones = this._props.phones;
+
+      this._table.insertAdjacentHTML('beforeend', "\n      ".concat(phones.map(function (phone) {
+        return _this6._generatePhonesListHTML(phone);
       }).join(''), "\n    "));
     }
   }, {
     key: "_renderTableTitle",
     value: function _renderTableTitle() {
-      this._table.innerHTML = "\n      <tr>\n        <th>\n          <input\n            data-element=\"phones-checkbox\"\n            type=\"checkbox\"\n            ".concat(this._mainCheckboxValue ? 'checked' : '', "\n          >\n        </th>\n        \n          ").concat(Object.entries(this._config).map(function (_ref8) {
+      var config = this._props.config;
+      this._table.innerHTML = "\n      <tr>\n        <th>\n          <input\n            data-element=\"phones-checkbox\"\n            type=\"checkbox\"\n            ".concat(this._mainCheckboxValue ? 'checked' : '', "\n          >\n        </th>\n        \n          ").concat(Object.entries(config).map(function (_ref8) {
         var _ref9 = _babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_0___default()(_ref8, 2),
             key = _ref9[0],
             value = _ref9[1];
@@ -638,6 +715,11 @@ function (_Component) {
       this._renderTableTitle();
 
       this._renderPhones();
+    }
+  }, {
+    key: "_updateView",
+    value: function _updateView() {
+      this._renderTableContent();
     }
   }, {
     key: "_render",
@@ -1258,6 +1340,32 @@ module.exports = _createClass;
 
 /***/ }),
 
+/***/ "./node_modules/@babel/runtime/helpers/defineProperty.js":
+/*!***************************************************************!*\
+  !*** ./node_modules/@babel/runtime/helpers/defineProperty.js ***!
+  \***************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+function _defineProperty(obj, key, value) {
+  if (key in obj) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  } else {
+    obj[key] = value;
+  }
+
+  return obj;
+}
+
+module.exports = _defineProperty;
+
+/***/ }),
+
 /***/ "./node_modules/@babel/runtime/helpers/getPrototypeOf.js":
 /*!***************************************************************!*\
   !*** ./node_modules/@babel/runtime/helpers/getPrototypeOf.js ***!
@@ -1383,6 +1491,38 @@ function _nonIterableSpread() {
 }
 
 module.exports = _nonIterableSpread;
+
+/***/ }),
+
+/***/ "./node_modules/@babel/runtime/helpers/objectSpread.js":
+/*!*************************************************************!*\
+  !*** ./node_modules/@babel/runtime/helpers/objectSpread.js ***!
+  \*************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var defineProperty = __webpack_require__(/*! ./defineProperty */ "./node_modules/@babel/runtime/helpers/defineProperty.js");
+
+function _objectSpread(target) {
+  for (var i = 1; i < arguments.length; i++) {
+    var source = arguments[i] != null ? arguments[i] : {};
+    var ownKeys = Object.keys(source);
+
+    if (typeof Object.getOwnPropertySymbols === 'function') {
+      ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) {
+        return Object.getOwnPropertyDescriptor(source, sym).enumerable;
+      }));
+    }
+
+    ownKeys.forEach(function (key) {
+      defineProperty(target, key, source[key]);
+    });
+  }
+
+  return target;
+}
+
+module.exports = _objectSpread;
 
 /***/ }),
 

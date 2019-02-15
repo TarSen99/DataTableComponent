@@ -1,50 +1,31 @@
 import Component from '../component.js';
 
 export default class Pagination extends Component {
-  constructor({ element, totalItemsCount, itemsPerPage }) {
+  constructor({ element, props }) {
     super({ element });
 
-    this.on('click', '[data-element="page-button"]', (event) => {
-      const buttonValue = +event.target.closest('[data-element="page-button"]')
-        .dataset.value;
+    this.updateProps(props);
 
-      this._updateCurrentPage(buttonValue);
+    this.on('click', '[data-element="page-button"]', (event) => {
+      const currentButton = event.target.closest('[data-element="page-button"]');
+      const buttonValue = +currentButton.dataset.value;
+
+      this.emit('page-changed', buttonValue);
     });
 
     this.on('click', '[data-element="switch-button"]', (event) => {
-      const buttonValue = +event.target.closest('[data-element="switch-button"]')
-        .dataset.value;
+      const currentButton = event.target.closest('[data-element="switch-button"]');
+      const buttonValue = +currentButton.dataset.value;
+      const { currentPage } = this._props;
 
       const newPage = this._calculateNewPageValue(buttonValue);
 
-      if (newPage === this._currentPage) {
+      if (newPage === currentPage) {
         return;
       }
 
-      this._updateCurrentPage(newPage);
+      this.emit('page-changed', newPage);
     });
-
-    this.updateOptions({
-      perPage: itemsPerPage,
-      totalItemsCount,
-    });
-  }
-
-  _updateTextDetails() {
-    const totalItemsCount = this._totalItemsCount;
-    let minItemValue = this._currentPage * this._itemsPerPage + 1;
-    let maxItemValue = minItemValue + this._itemsPerPage - 1;
-
-    maxItemValue = Math.min(maxItemValue, totalItemsCount);
-    minItemValue = Math.min(maxItemValue, minItemValue);
-
-    const minText = this._element.querySelector('[data-element="min-value"]');
-    const maxText = this._element.querySelector('[data-element="max-value"]');
-    const totalText = this._element.querySelector('[data-element="total-value"]');
-
-    minText.textContent = minItemValue;
-    maxText.textContent = maxItemValue;
-    totalText.textContent = totalItemsCount;
   }
 
   _toggleArrowButtons() {
@@ -55,8 +36,10 @@ export default class Pagination extends Component {
       '[data-element="switch-button"][data-value="1"]',
     );
 
+    const { currentPage, buttonsCount } = this._props;
+
     const minPage = 0;
-    const maxPage = Math.max(this._buttonsCount - 1, 0);
+    const maxPage = Math.max(buttonsCount - 1, 0);
 
     if (minPage === maxPage) {
       leftPageButton.disabled = true;
@@ -64,13 +47,13 @@ export default class Pagination extends Component {
       return;
     }
 
-    if (this._currentPage === minPage) {
+    if (currentPage === minPage) {
       leftPageButton.disabled = true;
       rightPageButton.disabled = false;
       return;
     }
 
-    if (this._currentPage === maxPage) {
+    if (currentPage === maxPage) {
       leftPageButton.disabled = false;
       rightPageButton.disabled = true;
       return;
@@ -81,20 +64,14 @@ export default class Pagination extends Component {
   }
 
   _calculateNewPageValue(buttonValue) {
-    let newPage = this._currentPage + buttonValue;
+    const { currentPage, buttonsCount } = this._props;
 
-    newPage = Math.min(newPage, this._buttonsCount - 1);
+    let newPage = currentPage + buttonValue;
+
+    newPage = Math.min(newPage, buttonsCount - 1);
     newPage = Math.max(newPage, 0);
 
     return newPage;
-  }
-
-  _updateCurrentPage(value) {
-    this._currentPage = value;
-    this._changeCurrentPageButton();
-    this._updateTextDetails();
-
-    this.emit('page-changed');
   }
 
   _changeCurrentPageButton() {
@@ -114,8 +91,10 @@ export default class Pagination extends Component {
   }
 
   _setActiveButtonStyle() {
+    const { currentPage } = this._props;
+
     const button = this._element.querySelector(
-      `[data-element="page-button"][data-value="${this._currentPage}"]`,
+      `[data-element="page-button"][data-value="${currentPage}"]`,
     );
 
     if (!button) {
@@ -125,29 +104,33 @@ export default class Pagination extends Component {
     button.classList.add('button-pag--active');
   }
 
-  resetCurrentPage() {
-    this._currentPage = 0;
-  }
-
-  updateOptions({ perPage, totalItemsCount }) {
-    this._itemsPerPage = perPage;
-    this._totalItemsCount = totalItemsCount;
-    this._buttonsCount = Math.ceil(this._totalItemsCount / this._itemsPerPage);
-    this.resetCurrentPage();
-
+  _updateView() {
     this._render();
-    this._changeCurrentPageButton(0);
-    this._updateTextDetails();
-  }
 
-  getCurrentPage() {
-    return this._currentPage;
-  }
+    const { totalItemsCount, itemsPerPage, currentPage } = this._props;
+
+    let minItemValue = currentPage * itemsPerPage + 1;
+    let maxItemValue = minItemValue + itemsPerPage - 1;
+
+    maxItemValue = Math.min(maxItemValue, totalItemsCount);
+    minItemValue = Math.min(maxItemValue, minItemValue);
+
+    const minText = this._getElement('min-value');
+    const maxText = this._getElement('max-value');
+    const totalText = this._getElement('total-value');
+
+    minText.textContent = minItemValue;
+    maxText.textContent = maxItemValue;
+    totalText.textContent = totalItemsCount;
+
+    this._changeCurrentPageButton();
+}
 
   _getButtonsHTML() {
+    const { buttonsCount } = this._props;
     const buttons = [];
 
-    for (let i = 0; i < this._buttonsCount; i++) {
+    for (let i = 0; i < buttonsCount; i++) {
       buttons.push(`
         <button 
         data-element="page-button"
