@@ -19,6 +19,7 @@ export default class DataTable extends Component {
 
   _init() {
     const defaultPerPage = 5;
+    const { phonesLength } = this._props;
 
     this._state = {
       filterValue: '',
@@ -28,8 +29,9 @@ export default class DataTable extends Component {
       mainCheckboxValue: false,
       currentPage: 0,
       totalItemsCount: this.getItemsCount(),
+      buttonsCount: Math.ceil(phonesLength / defaultPerPage),
       itemsPerPage: defaultPerPage,
-      buttonsCount: Math.ceil(this.getItemsCount() / defaultPerPage),
+      perPageOptions: [3, 5, 10, 15, 20],
     };
 
     let { defaultPhones } = this._props;
@@ -56,13 +58,16 @@ export default class DataTable extends Component {
       const selectedFilter = btn.dataset.value;
 
       this._updateState({ selectedFilter });
-
       this._resetCurrentPage();
       this._makeFiltering();
 
+      const { itemsPerPage, buttonsCount } = this._state;
+      const { phonesLength } = this._props;
+
       this._pagination.updateProps({
-        perPage: this._paginationSelector.getPerPage(),
-        totalItemsCount: this.getItemsCount(),
+        perPage: itemsPerPage,
+        phonesLength,
+        buttonsCount,
       });
     });
 
@@ -91,10 +96,18 @@ export default class DataTable extends Component {
       this._debounce(() => {
         this._resetCurrentPage();
         this._makeFiltering();
+        const {
+          currentPage,
+          itemsPerPage,
+          buttonsCount,
+        } = this._state;
 
+        const { phonesLength } = this._props;
         this._pagination.updateProps({
-          perPage: this._paginationSelector.getPerPage(),
-          totalItemsCount: this.getItemsCount(),
+          currentPage,
+          itemsPerPage,
+          phonesLength,
+          buttonsCount,
         });
       }, 500),
     );
@@ -103,42 +116,50 @@ export default class DataTable extends Component {
   }
 
   _initPagination() {
-    this._paginationSelector = new PaginationSelector({
-      element: this._getComponent('pagination-selector'),
-      options: [3, 5, 10, 15, 20],
-      defaultValue: 5,
-    });
-
     const {
-      totalItemsCount,
       itemsPerPage,
       buttonsCount,
       currentPage,
+      perPageOptions
     } = this._state;
+
+    const { phonesLength } = this._props;
+
+    this._paginationSelector = new PaginationSelector({
+      element: this._getComponent('pagination-selector'),
+      props: {
+        perPageOptions,
+        itemsPerPage,
+      },
+    });
 
     this._pagination = new Pagination({
       element: this._getComponent('pagination'),
       props: {
-        totalItemsCount,
+        phonesLength,
         itemsPerPage,
         buttonsCount,
         currentPage,
       },
     });
 
-    this._paginationSelector.subscribe('change-per-page', () => {
+    this._paginationSelector.subscribe('change-per-page', (newPerPage) => {
+      this._updateState({ itemsPerPage: newPerPage });
+      this._makeFiltering();
+      const { buttonsCount } = this._state;
+
       this._pagination.updateProps({
-        totalItemsCount,
-        itemsPerPage,
+        itemsPerPage: newPerPage,
         buttonsCount,
-        currentPage,
       });
 
-      this._makeFiltering();
+      this._paginationSelector.updateProps({
+        itemsPerPage: newPerPage,
+      });
     });
 
     this._pagination.subscribe('page-changed', (newPage) => {
-      this._updateCurrentPage(newPage);
+      this._updateState({ currentPage: newPage });
       this._pagination.updateProps({ currentPage: newPage });
 
       this._makeFiltering();
@@ -224,10 +245,6 @@ export default class DataTable extends Component {
   _resetCurrentPage() {
     const currentPage = 0;
 
-    this._updateState({ currentPage });
-  }
-
-  _updateCurrentPage(currentPage) {
     this._updateState({ currentPage });
   }
 
@@ -378,18 +395,22 @@ export default class DataTable extends Component {
       }
     });
 
+    const phonesLength = phones.length;
+    const { itemsPerPage } = this._state;
     phones = this._sortPhones(phones);
+
     phones = this._getItemsOfCurrentPage(phones);
     const mainCheckboxValue = this._getMainCheckValue(phones);
+
+    this.updateProps({
+      phonesLength,
+      phones,
+    });
 
     this._updateState({
       filterValue,
       mainCheckboxValue,
-    });
-
-    this.updateProps({
-      phonesLength: phones.length,
-      phones,
+      buttonsCount: Math.ceil(phonesLength / itemsPerPage),
     });
   }
 
@@ -451,6 +472,7 @@ export default class DataTable extends Component {
 
   _renderTableTitle() {
     const { config } = this._props;
+    const { mainCheckboxValue } = this._state;
 
     this._table.innerHTML = `
       <tr>
@@ -458,7 +480,7 @@ export default class DataTable extends Component {
           <input
             data-element="phones-checkbox"
             type="checkbox"
-            ${this._mainCheckboxValue ? 'checked' : ''}
+            ${mainCheckboxValue ? 'checked' : ''}
           >
         </th>
         

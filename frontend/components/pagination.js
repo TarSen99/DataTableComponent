@@ -107,12 +107,12 @@ export default class Pagination extends Component {
   _updateView() {
     this._render();
 
-    const { totalItemsCount, itemsPerPage, currentPage } = this._props;
+    const { phonesLength, itemsPerPage, currentPage } = this._props;
 
     let minItemValue = currentPage * itemsPerPage + 1;
     let maxItemValue = minItemValue + itemsPerPage - 1;
 
-    maxItemValue = Math.min(maxItemValue, totalItemsCount);
+    maxItemValue = Math.min(maxItemValue, phonesLength);
     minItemValue = Math.min(maxItemValue, minItemValue);
 
     const minText = this._getElement('min-value');
@@ -121,7 +121,7 @@ export default class Pagination extends Component {
 
     minText.textContent = minItemValue;
     maxText.textContent = maxItemValue;
-    totalText.textContent = totalItemsCount;
+    totalText.textContent = phonesLength;
 
     this._changeCurrentPageButton();
 }

@@ -1,41 +1,40 @@
 import Component from '../component.js';
 
 export default class PaginationSelector extends Component {
-  constructor({ element, options, defaultValue }) {
+  constructor({ element, props }) {
     super({ element });
-    this._options = options;
-    this._default = defaultValue;
+
+    this.updateProps(props);
 
     this.on('change', '[data-element="select-pages"]', (event) => {
-      const currPerPage = event.target.closest('[data-element="select-pages"]')
-        .value;
-      this._default = +currPerPage;
+      const currPerPageSelector = event.target.closest('[data-element="select-pages"]');
+      const selectorValue = currPerPageSelector.value;
 
-      this.emit('change-per-page');
+      this.emit('change-per-page', +selectorValue);
     });
+  }
 
+  _updateView() {
     this._render();
   }
 
-  getPerPage() {
-    return this._default;
-  }
-
   _render() {
+    const { perPageOptions, itemsPerPage } = this._props;
+
     this._element.innerHTML = `
-        <select 
+      <select 
         data-element="select-pages"
         class="header__select"
-        >
-          ${this._options.map(option => `
-              <option 
+      >
+        ${perPageOptions.map(option => `
+            <option 
               value="${option}"
-              ${option === this._default ? 'selected' : ''}
-              >
-                ${option}
-              </option>
-            `).join('')};
-        </select>
+              ${option === itemsPerPage ? 'selected' : ''}
+            >
+              ${option}
+            </option>
+          `).join('')};
+      </select>
     `;
   }
 }
